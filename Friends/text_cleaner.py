@@ -1,6 +1,6 @@
 import contractions
 
-with open('friends_script.txt', 'r') as data_file:
+with open('../../../Data/LM/friends_script.txt', 'r') as data_file:
     data = data_file.read()
 
 # Replace common unwanted occurrences"
@@ -25,6 +25,6 @@ data.replace(replace_str4, target_str4)
 data = contractions.fix(data)
 
 # Save editted text data
-edit_data_file = open("friends_script_editted.txt", "w")
+edit_data_file = open("../../../Data/LM/friends_script_editted.txt", "w")
 edit_data_file.write(data)
 edit_data_file.close()
