@@ -12,7 +12,7 @@ from tensorflow.keras.optimizers import Nadam
 
 
 # Text data file
-fname = "friends_script_editted.txt"
+fname = "../../../Data/LM/friends_script_editted.txt"
 
 # Load data
 with io.open(fname, encoding='utf-8') as f:
