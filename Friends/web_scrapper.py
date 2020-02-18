@@ -22,7 +22,7 @@ for link in links:
 
 # Extract content
 t1 = time.time()
-data_file = open("friends_script.txt", "w")
+data_file = open("../../../Data/LM/friends_script.txt", "w")
 for eps in useful_links:
     eps_url = base_url+eps
     print(eps_url)
