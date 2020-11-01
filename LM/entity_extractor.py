@@ -18,6 +18,7 @@ class EntityExtractor:
         self.raw_triplets = []
         self.entity_list = []
         
+        self.nlp = spacy.load('en_core_web_sm')
     
     def load_sentence_corpus(self):
         with open(self.input_file, 'rb') as f:
@@ -27,8 +28,34 @@ class EntityExtractor:
         pass
         
         
-    def find_entities(self, sent):
-        pass
+    def _find_triplet(self, sent):
+        doc = self.nlp(sent)
+        tok_dict = {tok.dep_: tok for tok in doc }
+        head = tok_dict.get('nsubj', None)
+        relationship = tok_dict.get('ROOT', None)
+        if relationship is not None:
+            relationship = relationship.lemma_
+        tail = tok_dict.get('dobj', None)
+        return (head, relationship, tail)
+    
+    def _validate_triplet(self, triplet):
+        return all(triplet)
+    
+    def _align_triplet(self, triplet):
+        head = str(triplet[0]).lower()
+        tail = str(triplet[2]).lower()
+        relationship = str(triplet[1]).lower()
+        return (head, relationship, tail)
+        
+    def find_fact_triplets(self):
+        self.raw_triplets = []
+        for sent in tqdm(self.sentences, total=len(self.sentences), desc="Factifying:"):
+            triplet = self._find_triplet(sent)
+            is_valid = self._validate_triplet(triplet)
+            if is_valid:
+                triplet = self._align_triplet(triplet)
+                self.raw_triplets.append(triplet)
+            
     
     def save_triplets(self):
         self.fact_triplet_df = pd.DataFrame(columns=['Head', 'Relation', 'Tail'])
