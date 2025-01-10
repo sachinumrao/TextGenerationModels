@@ -24,4 +24,4 @@ while True:
     t_stop = perf_counter()
     print(decoded_output)
     print("Time Taken: ", t_stop - t_init)
-    print("-"*120)
+    print("-" * 120)
