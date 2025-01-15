@@ -8,27 +8,41 @@ from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
+    BitsAndBytesConfig,
     DataCollatorForLanguageModeling,
     Trainer,
     TrainingArguments,
 )
 
+os.environ["WANDB_PROJECT"] = "LOTR_Gemma2B_LORA"
+
 # global params
-DATA_DIR = os.path.join(Path.home(), "Data")
-OUTPUT_DIR = ""
-LEARNING_RATE = 3e-4
+DATA_PATH = os.path.join(Path.home(), "Data", "lotr_grouped.txt")
+OUTPUT_DIR = os.path.join(Path.home(), "Models", "lotr_gemma2b_adapters")
+LEARNING_RATE = 5e-5
 BATCH_SIZE = 4
 NUM_EPOCHS = 5
 MAX_LENGTH = 1024
 LR_SCHEDULER = "cosine"
 
 
-def encode_dataset(tokenizer, examples):
-    pass
+def encode_dataset(tokenizer, example):
+    outputs = tokenizer(
+        example["text"],
+        padding=True,
+        truncation=True,
+        max_length=MAX_LENGTH,
+        return_tensors="pt",
+        return_overflowing_tokens=False,
+    )
+    return {
+        "input_ids": outputs["input_ids"],
+        "attention_mask": outputs["attentions_mask"],
+    }
 
 
 def get_dataset(tokenizer):
-    dataset = load_dataset("text", data_dir=DATA_DIR)
+    dataset = load_dataset("text", data_files=[])
     dataset = dataset.shuffle(seed=42)
     train_split = 0.8
     train_size = int(train_split * len(dataset))
@@ -52,9 +66,16 @@ def main():
     # load model
     print("Downloading base model and tokenizer...")
     model_id = "google/gemma-2-2b"
+
+    # config to load model in 8 bit
+    quant_config = BitsAndBytesConfig(load_in_8bit=True)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForCausalLM.from_pretrained(
-        model_id, load_in_8bit=True, torch_dtype=torch.float16, trust_remote_code=True
+        model_id,
+        torch_dtype=torch.float16,
+        trust_remote_code=True,
+        # quantization_config=quant_config,
+        device_map="auto",
     )
 
     # lora config
@@ -93,6 +114,7 @@ def main():
         save_strategy="epoch",
         dataloader_num_workers=4,
         optim="adamw_bnb_8bit",
+        # report_to="wandb",
     )
 
     trainer = Trainer(
@@ -101,11 +123,10 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
         data_collator=data_collator,
-        # compute_metrics=compute_metrics,
     )
 
     # train the model
-    trainer.train()
+    # trainer.train()
 
     # save the model
     trainer.save_model(OUTPUT_DIR)
@@ -116,6 +137,6 @@ if __name__ == "__main__":
 
 
 # TODO:
-# - implement text grouping
-# - text encoding with correct args
-# - wandb experiment tracking
+# - [x] implement text grouping
+# - [x] text encoding with correct args
+# - [x] wandb experiment tracking
