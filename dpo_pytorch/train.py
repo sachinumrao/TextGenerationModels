@@ -115,7 +115,7 @@ def main():
     model.to(DEVICE)
     print("Model put in compute device...")
 
-    # optimize model with compile => peft expects non-quantized model
+    # optimize model with compile => peft expects non-compiled model
     # model = torch.compile(model, mode="max-autotune")
     # print("Model optimized with compile...")
 
