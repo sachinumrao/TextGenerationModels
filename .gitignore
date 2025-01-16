@@ -1,3 +1,4 @@
+dpo_pytorch/wandb/
 # Model checkpoints
 checkpoint_pt/
 models/

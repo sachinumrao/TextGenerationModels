@@ -26,8 +26,8 @@ else:
 
 # global params
 OUTPUT_DIR = os.path.join(Path.home(), "Models", "lotr_gemma2b_adapters")
-LEARNING_RATE = 5e-5
-BATCH_SIZE = 1
+LEARNING_RATE = 3e-4
+BATCH_SIZE = 2
 NUM_EPOCHS = 5
 MAX_LENGTH = 512
 LR_SCHEDULER = "cosine"
@@ -54,8 +54,6 @@ def encode_dataset(tokenizer, example):
 def get_dataset(tokenizer):
     dataset = load_dataset("csv", data_files=[DATA_PATH])
     dataset = dataset.shuffle(seed=42)
-    train_split = 0.8
-    train_size = int(train_split * len(dataset))
 
     print(dataset)
     dataset = dataset["train"].train_test_split(test_size=0.2, shuffle=True, seed=42)
@@ -87,6 +85,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype="auto",
+        attn_implementation="eager",
         trust_remote_code=True,
         quantization_config=quant_config,
         device_map="auto",
@@ -132,6 +131,7 @@ def main():
         per_device_eval_batch_size=BATCH_SIZE,
         num_train_epochs=NUM_EPOCHS,
         weight_decay=0.01,
+        warmup_ratio=0.01,
         lr_scheduler_type=LR_SCHEDULER,
         gradient_accumulation_steps=4,
         gradient_checkpointing=True,
@@ -139,7 +139,9 @@ def main():
         save_strategy="epoch",
         dataloader_num_workers=4,
         optim="adamw_torch_fused",
-        # report_to="wandb",
+        report_to="wandb",
+        run_name="aragorn_wraith_fight1",
+        logging_steps=1,
     )
 
     trainer = Trainer(
@@ -151,10 +153,10 @@ def main():
     )
 
     # train the model
-    # trainer.train()
+    trainer.train()
 
     # save the model
-    # trainer.save_model(OUTPUT_DIR)
+    model.save_pretrained(OUTPUT_DIR)
 
 
 if __name__ == "__main__":
