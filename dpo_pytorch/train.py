@@ -24,12 +24,16 @@ if torch.backends.mps.is_available():
 else:
     DEVICE = "cpu"
 
+wandb_run_name = "aragorn_wraith_fight2"
+
 # global params
-OUTPUT_DIR = os.path.join(Path.home(), "Models", "lotr_gemma2b_adapters")
+OUTPUT_DIR = os.path.join(Path.home(), "Models", "lotr_gemma2b_adapters2")
 LEARNING_RATE = 3e-4
-BATCH_SIZE = 2
+BATCH_SIZE = 4
 NUM_EPOCHS = 5
 MAX_LENGTH = 512
+GRAD_ACCM = 4
+WARM_UP_RATIO = 0.1
 LR_SCHEDULER = "cosine"
 DATA_PATH = os.path.join(Path.home(), "Data", f"lotr_grouped_{MAX_LENGTH}.csv")
 DATA_COL = "Text_Chunk_LOTR"
@@ -131,16 +135,18 @@ def main():
         per_device_eval_batch_size=BATCH_SIZE,
         num_train_epochs=NUM_EPOCHS,
         weight_decay=0.01,
-        warmup_ratio=0.01,
+        warmup_ratio=WARM_UP_RATIO,
         lr_scheduler_type=LR_SCHEDULER,
-        gradient_accumulation_steps=4,
+        max_grad_norm=1.0 / GRAD_ACCM,
+        gradient_accumulation_steps=GRAD_ACCM,
         gradient_checkpointing=True,
         eval_strategy="epoch",
         save_strategy="epoch",
         dataloader_num_workers=4,
+        torch_empty_cache_steps=32,
         optim="adamw_torch_fused",
         report_to="wandb",
-        run_name="aragorn_wraith_fight1",
+        run_name=wandb_run_name,
         logging_steps=1,
     )
 
@@ -167,3 +173,6 @@ if __name__ == "__main__":
 # - [x] implement text grouping
 # - [x] text encoding with correct args
 # - [x] wandb experiment tracking
+# - [x] increase warmup ratio to 0.1
+# - [x] use gradient clip norm
+# - [ ] implement resume from checkpoint
