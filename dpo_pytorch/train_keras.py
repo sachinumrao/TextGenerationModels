@@ -33,6 +33,7 @@ def get_data():
 
 def load_model():
     model = keras_nlp.models.GemmaCausalLM.from_preset("gemma2_2b_en")
+    model.quantize("int8")
     return model
 
 

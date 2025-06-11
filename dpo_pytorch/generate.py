@@ -64,6 +64,7 @@ def generate(prompt, model, tokenizer):
     print("TPS: ", tps)
 
     response = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+
     return response
 
 
@@ -93,3 +94,4 @@ if __name__ == "__main__":
 
 # TODO
 # - fix very slow generation
+# - fix generation length in response
